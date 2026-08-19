@@ -1,0 +1,90 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Validation for User
+    function isValidUser(data) {
+      let validKeys = data.keys().hasOnly(['isGuest', 'name', 'region', 'createdAt', 'updatedAt']);
+      let hasRequired = data.keys().hasAll(['isGuest', 'createdAt', 'updatedAt']);
+      
+      let typeCheck = data.isGuest is bool &&
+                      (data.get('name', '') is string && data.get('name', '').size() <= 100) &&
+                      (data.get('region', '') is string && data.get('region', '').size() <= 100) &&
+                      data.createdAt == request.time &&
+                      data.updatedAt == request.time;
+      
+      return validKeys && hasRequired && typeCheck;
+    }
+    
+    function isValidUserUpdate(data, oldData) {
+      let affectedKeys = data.diff(oldData).affectedKeys();
+      let allowedKeys = affectedKeys.hasOnly(['name', 'region', 'isGuest', 'updatedAt']);
+      
+      let typeCheck = (!('isGuest' in affectedKeys) || data.isGuest is bool) &&
+                      (!('name' in affectedKeys) || (data.name is string && data.name.size() <= 100)) &&
+                      (!('region' in affectedKeys) || (data.region is string && data.region.size() <= 100)) &&
+                      data.updatedAt == request.time &&
+                      data.createdAt == oldData.createdAt; // Immortal field
+                      
+      return allowedKeys && typeCheck;
+    }
+
+    // Validation for Diagnosis
+    function isValidDiagnosis(data) {
+      let validKeys = data.keys().hasOnly(['userId', 'cropType', 'result', 'status', 'createdAt']);
+      let hasRequired = data.keys().hasAll(['userId', 'cropType', 'status', 'createdAt']);
+      
+      let typeCheck = (data.userId is string && data.userId.size() <= 128) &&
+                      (data.cropType is string && data.cropType.size() <= 100) &&
+                      (data.get('result', '') is string && data.get('result', '').size() <= 500) &&
+                      (data.status in ['pending', 'completed', 'failed']) &&
+                      data.createdAt == request.time;
+                      
+      return validKeys && hasRequired && typeCheck;
+    }
+
+    // Match users
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId) && isValidUserUpdate(incoming(), existing());
+    }
+
+    // Match diagnostics
+    match /diagnostics/{diagnosisId} {
+      allow read: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(diagnosisId) && 
+                       incoming().userId == request.auth.uid && 
+                       isValidDiagnosis(incoming()) &&
+                       exists(/databases/$(database)/documents/users/$(request.auth.uid));
+      allow update: if false; // Immutable for now
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A farmer user or guest",
+      "type": "object",
+      "properties": {
+        "isGuest": { "type": "boolean" },
+        "name": { "type": "string", "maxLength": 100 },
+        "region": { "type": "string", "maxLength": 100 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["isGuest", "createdAt", "updatedAt"]
+    },
+    "Diagnosis": {
+      "title": "Diagnosis",
+      "description": "A crop disease diagnosis result",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "cropType": { "type": "string", "maxLength": 100 },
+        "result": { "type": "string", "maxLength": 500 },
+        "status": { "type": "string", "enum": ["pending", "completed", "failed"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "cropType", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles"
+    },
+    "diagnostics/{diagnosisId}": {
+      "schema": { "$ref": "#/entities/Diagnosis" },
+      "description": "Diagnostic scans"
+    }
+  }
+}
