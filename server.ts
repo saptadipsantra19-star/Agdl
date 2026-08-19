@@ -50,7 +50,7 @@ Format the links like this:
       while (retries >= 0) {
         try {
           response = await ai.models.generateContent({
-            model: retries === 2 ? "gemini-3.7-flash" : "gemini-3.1-flash-lite",
+            model: "gemini-2.5-flash",
             contents,
             config
           });
