@@ -43,6 +43,14 @@ Format the links like this:
 - [Product Name on Flipkart](https://www.flipkart.com/search?q=product+name)`,
       };
 
+      // Automatic Model Selection
+      // If the prompt is complex (long text, lots of context), use the advanced model
+      // Otherwise, use the fast/lite model for instant responses
+      const latestMessage = messages[messages.length - 1].content;
+      const isComplexQuery = latestMessage.length > 100 || latestMessage.toLowerCase().includes('diagnose') || latestMessage.toLowerCase().includes('analyze');
+      
+      const selectedModel = isComplexQuery ? "gemini-3.7-flash" : "gemini-3.6-flash";
+
       let response;
       let retries = 2;
       let delay = 1000;
@@ -50,7 +58,7 @@ Format the links like this:
       while (retries >= 0) {
         try {
           response = await ai.models.generateContent({
-            model: "gemini-3.6-flash",
+            model: selectedModel,
             contents,
             config
           });
