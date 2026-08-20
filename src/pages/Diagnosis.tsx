@@ -144,11 +144,37 @@ export default function Diagnosis() {
             onChange={(e) => setCropType(e.target.value)}
           >
             <option disabled value="">Select affected crop...</option>
-            <option value="tomato">Tomato</option>
-            <option value="rice">Rice</option>
-            <option value="maize">Maize</option>
-            <option value="wheat">Wheat</option>
-            <option value="potato">Potato</option>
+            <option value="Rice / Paddy">Rice / Paddy</option>
+            <option value="Wheat">Wheat</option>
+            <option value="Maize / Corn">Maize / Corn</option>
+            <option value="Pearl Millet / Bajra">Pearl Millet / Bajra</option>
+            <option value="Sorghum / Jowar">Sorghum / Jowar</option>
+            <option value="Finger Millet / Ragi">Finger Millet / Ragi</option>
+            <option value="Green Gram / Moong Dal">Green Gram / Moong Dal</option>
+            <option value="Black Gram / Urad Dal">Black Gram / Urad Dal</option>
+            <option value="Lentil / Masoor Dal">Lentil / Masoor Dal</option>
+            <option value="Mustard">Mustard (Leaf)</option>
+            <option value="Mustard Seed">Mustard Seed</option>
+            <option value="Sunflower">Sunflower</option>
+            <option value="Sesame / Til">Sesame / Til</option>
+            <option value="Potato">Potato</option>
+            <option value="Tomato">Tomato</option>
+            <option value="Carrot">Carrot</option>
+            <option value="Radish / Mooli">Radish / Mooli</option>
+            <option value="Spinach / Palak">Spinach / Palak</option>
+            <option value="Peas / Matar">Peas / Matar</option>
+            <option value="Garlic">Garlic</option>
+            <option value="Turmeric / Haldi">Turmeric / Haldi</option>
+            <option value="Ginger / Adrak">Ginger / Adrak</option>
+            <option value="Coriander / Dhania">Coriander / Dhania</option>
+            <option value="Papaya">Papaya</option>
+            <option value="Guava">Guava</option>
+            <option value="Grapes">Grapes</option>
+            <option value="Pomegranate / Anar">Pomegranate / Anar</option>
+            <option value="Watermelon">Watermelon</option>
+            <option value="Coconut">Coconut</option>
+            <option value="Jute">Jute</option>
+            <option value="Tea">Tea</option>
           </select>
           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-text-muted">
             <ChevronDown className="w-5 h-5" />
