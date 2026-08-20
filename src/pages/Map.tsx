@@ -1,4 +1,4 @@
-import { MapPin, Search, CloudRain, Sun, Cloud, Thermometer, Droplets, Wind } from 'lucide-react';
+import { MapPin, Search, CloudRain, Sun, Cloud, Thermometer, Droplets, Wind, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps';
@@ -18,6 +18,34 @@ const hasValidKey = Boolean(API_KEY) && API_KEY !== 'YOUR_API_KEY';
 
 export default function MapView() {
   const [activeLayer, setActiveLayer] = useState('Temperature');
+  const [center, setCenter] = useState({lat: 20.5937, lng: 78.9629});
+  const [zoom, setZoom] = useState(5);
+  const [isLocating, setIsLocating] = useState(false);
+
+  const handleLocate = () => {
+    setIsLocating(true);
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCenter({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+          setZoom(12);
+          setIsLocating(false);
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          alert("Unable to retrieve your location. Please check browser permissions.");
+          setIsLocating(false);
+        },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+      );
+    } else {
+      alert("Geolocation is not supported by your browser.");
+      setIsLocating(false);
+    }
+  };
 
   const layers = [
     { name: 'Temperature', icon: Thermometer },
@@ -46,9 +74,13 @@ export default function MapView() {
       <div className="absolute inset-0 z-0">
         <APIProvider apiKey={API_KEY} version="weekly">
           <Map
-            defaultCenter={{lat: 20.5937, lng: 78.9629}} // Default center (India)
-            defaultZoom={5}
-            mapId="5698287f6e21cb251b344e26"
+            center={center}
+            zoom={zoom}
+            onCameraChanged={(ev) => {
+              setCenter(ev.detail.center);
+              setZoom(ev.detail.zoom);
+            }}
+            mapId="AGRI_MAP_ID"
             internalUsageAttributionIds={['gmp_mcp_codeassist_v1_aistudio']}
             style={{width: '100%', height: '100%'}}
             disableDefaultUI={true}
@@ -93,8 +125,15 @@ export default function MapView() {
         {/* Bottom Controls & Legend */}
         <div className="pointer-events-auto flex flex-col gap-4 w-full max-w-lg mx-auto md:mb-6">
           <div className="flex justify-end w-full">
-            <button className="bg-surface text-primary p-3 rounded-full shadow-lg border border-border hover:bg-slate-50 active:scale-95 transition-all flex items-center justify-center">
-              <MapPin className="w-6 h-6" />
+            <button 
+              onClick={handleLocate}
+              disabled={isLocating}
+              className={cn(
+                "bg-surface text-primary p-3 rounded-full shadow-lg border border-border hover:bg-slate-50 active:scale-95 transition-all flex items-center justify-center",
+                isLocating && "opacity-50 cursor-wait"
+              )}
+            >
+              {isLocating ? <Loader2 className="w-6 h-6 animate-spin" /> : <MapPin className="w-6 h-6" />}
             </button>
           </div>
 
