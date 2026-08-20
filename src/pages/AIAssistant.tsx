@@ -65,7 +65,20 @@ export default function AIAssistant() {
       setMessages([...newMessages, { role: 'model', content: data.text }]);
     } catch (error: any) {
       console.error(error);
-      setMessages([...newMessages, { role: 'model', content: "Sorry, I'm having trouble connecting right now. Please try again." }]);
+      let errorMsg = "Sorry, I'm having trouble connecting right now. Please try again.";
+      if (error.message) {
+        try {
+          const parsed = JSON.parse(error.message);
+          if (parsed.error && parsed.error.message) errorMsg = parsed.error.message;
+        } catch(e) {
+          if (error.message.includes("Quota exceeded") || error.message.includes("429")) {
+            errorMsg = "You have exceeded your Gemini AI usage quota. Please wait a bit before trying again, or upgrade your plan.";
+          } else {
+            errorMsg = `Error: ${error.message}`;
+          }
+        }
+      }
+      setMessages([...newMessages, { role: 'model', content: errorMsg }]);
     } finally {
       setIsLoading(false);
     }

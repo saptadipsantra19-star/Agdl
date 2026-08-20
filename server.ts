@@ -49,10 +49,7 @@ Keep it concise and professional.`;
 
       const fallbackModels = [
         "gemini-3.7-flash",
-        "gemini-2.5-flash",
-        "gemini-2.0-flash",
-        "gemini-1.5-flash",
-        "gemini-1.5-flash-8b"
+        "gemini-3.6-flash"
       ];
 
       let response;
@@ -127,10 +124,7 @@ Format the links like this:
 
       const fallbackModels = [
         "gemini-3.7-flash",
-        "gemini-2.5-flash",
-        "gemini-2.0-flash",
-        "gemini-1.5-flash",
-        "gemini-1.5-flash-8b"
+        "gemini-3.6-flash"
       ];
 
       let response;
