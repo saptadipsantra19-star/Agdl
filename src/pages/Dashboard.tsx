@@ -7,6 +7,20 @@ import { useState, useEffect } from 'react';
 export default function Dashboard() {
   const { user } = useAuth();
   const [region, setRegion] = useState('Locating...');
+  const [weather, setWeather] = useState({ temp: '--', condition: 'Fetching...' });
+
+  const getWeatherCondition = (code: number) => {
+    if (code === 0) return 'Clear';
+    if (code === 1 || code === 2) return 'Partly Cloudy';
+    if (code === 3) return 'Cloudy';
+    if (code >= 45 && code <= 48) return 'Foggy';
+    if (code >= 51 && code <= 55) return 'Drizzle';
+    if (code >= 61 && code <= 67) return 'Rainy';
+    if (code >= 71 && code <= 77) return 'Snow';
+    if (code >= 80 && code <= 82) return 'Showers';
+    if (code >= 95) return 'Thunderstorm';
+    return 'Clear';
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -29,6 +43,18 @@ export default function Dashboard() {
         async (position) => {
           if (!mounted) return;
           try {
+            // Fetch real weather using Open-Meteo (Free, no API key needed)
+            const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&current_weather=true`);
+            if (weatherRes.ok) {
+              const weatherData = await weatherRes.json();
+              if (weatherData && weatherData.current_weather && mounted) {
+                setWeather({
+                  temp: Math.round(weatherData.current_weather.temperature).toString(),
+                  condition: getWeatherCondition(weatherData.current_weather.weathercode)
+                });
+              }
+            }
+
             // First try Google Maps if key exists
             const apiKey = import.meta.env.VITE_GOOGLE_MAPS_PLATFORM_KEY;
             if (apiKey) {
@@ -106,8 +132,8 @@ export default function Dashboard() {
               <Sun className="w-6 h-6" />
             </div>
             <div>
-              <div className="text-xl font-bold text-primary">24°C</div>
-              <div className="text-sm text-text-muted">Sunny</div>
+              <div className="text-xl font-bold text-primary">{weather.temp}°C</div>
+              <div className="text-sm text-text-muted">{weather.condition}</div>
             </div>
           </div>
           <div className="flex items-center gap-4 bg-[#eef4fd] rounded-xl p-4">
