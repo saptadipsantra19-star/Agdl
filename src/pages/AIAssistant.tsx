@@ -1,9 +1,21 @@
 import { ArrowLeft, Sparkles, Send, Mic, FlaskConical, Droplets, BarChart3, Bug, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
 
 type Message = { role: 'user' | 'model'; content: string };
+
+const formatGeminiText = (text: string) => {
+  // Format bold (**text**)
+  let html = text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold">$1</strong>');
+  
+  // Format links ([text](url))
+  html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 font-bold hover:underline">$1</a>');
+  
+  // Format standalone URLs
+  html = html.replace(/(?<!href=")(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 font-bold hover:underline">$1</a>');
+
+  return html;
+};
 
 export default function AIAssistant() {
   const [messages, setMessages] = useState<Message[]>([
@@ -162,18 +174,10 @@ export default function AIAssistant() {
                 {msg.role === 'user' ? (
                   <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                 ) : (
-                  <ReactMarkdown
-                    components={{
-                      a: ({ node, ...props }) => <a {...props} className="text-blue-600 font-bold hover:underline" target="_blank" rel="noopener noreferrer" />,
-                      strong: ({ node, ...props }) => <strong {...props} className="font-bold" />,
-                      p: ({ node, ...props }) => <p {...props} className="text-sm leading-relaxed whitespace-pre-wrap mb-3 last:mb-0" />,
-                      ul: ({ node, ...props }) => <ul {...props} className="list-disc pl-5 mb-3 text-sm" />,
-                      ol: ({ node, ...props }) => <ol {...props} className="list-decimal pl-5 mb-3 text-sm" />,
-                      li: ({ node, ...props }) => <li {...props} className="mb-1 text-sm" />
-                    }}
-                  >
-                    {msg.content}
-                  </ReactMarkdown>
+                  <div 
+                    className="text-sm leading-relaxed whitespace-pre-wrap format-gemini"
+                    dangerouslySetInnerHTML={{ __html: formatGeminiText(msg.content) }} 
+                  />
                 )}
               </div>
             </div>
