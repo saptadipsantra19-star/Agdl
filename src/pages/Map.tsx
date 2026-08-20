@@ -85,18 +85,18 @@ export default function MapView() {
             style={{width: '100%', height: '100%'}}
             disableDefaultUI={true}
           >
-            {/* Some mock markers that would normally come from your database */}
-            <AdvancedMarker position={{lat: 28.6139, lng: 77.2090}} title="Farm A">
+            {/* Dynamic Weather Markers based on current center */}
+            <AdvancedMarker position={{lat: center.lat + 0.05, lng: center.lng + 0.05}} title="Local Farm A">
                <div className="bg-surface p-2 rounded-full shadow-lg border border-border text-[#7f5539]">
                  <Sun className="w-5 h-5" />
                </div>
             </AdvancedMarker>
-            <AdvancedMarker position={{lat: 19.0760, lng: 72.8777}} title="Farm B">
+            <AdvancedMarker position={{lat: center.lat - 0.04, lng: center.lng + 0.02}} title="Local Farm B">
                <div className="bg-surface p-2 rounded-full shadow-lg border border-border text-primary">
                  <CloudRain className="w-5 h-5" />
                </div>
             </AdvancedMarker>
-            <AdvancedMarker position={{lat: 12.9716, lng: 77.5946}} title="Farm C">
+            <AdvancedMarker position={{lat: center.lat + 0.01, lng: center.lng - 0.06}} title="Local Farm C">
                <div className="bg-surface p-2 rounded-full shadow-lg border border-border text-text-muted">
                  <Cloud className="w-5 h-5" />
                </div>
