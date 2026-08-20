@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { Camera, ChevronDown, Search, Microscope, ArrowLeft, AlertCircle, X } from 'lucide-react';
+import { useState, useRef, ChangeEvent } from 'react';
+import { Camera, ChevronDown, Search, Microscope, ArrowLeft, AlertCircle, X, CheckCircle2, ListChecks, Activity, ShieldAlert, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth, db } from '@/lib/firebase';
@@ -8,13 +8,19 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 export default function Diagnosis() {
   const [cropType, setCropType] = useState('');
   const [isDiagnosing, setIsDiagnosing] = useState(false);
-  const [result, setResult] = useState<null | {status: string, message: string}>(null);
+  const [result, setResult] = useState<null | {
+    status: string,
+    disease?: string,
+    confidence?: string,
+    treatment?: string[],
+    message?: string
+  }>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 10 * 1024 * 1024) {
@@ -61,7 +67,12 @@ export default function Diagnosis() {
         createdAt: serverTimestamp()
       });
       
-      setResult({ status: 'warning', message: data.diagnosis });
+      setResult({ 
+        status: 'success', 
+        disease: data.diagnosis.disease,
+        confidence: data.diagnosis.confidence,
+        treatment: data.diagnosis.treatment
+      });
     } catch (e: any) {
       console.error(e);
       setResult({ status: 'error', message: e.message || 'Analysis failed. Please try again.' });
@@ -198,16 +209,76 @@ export default function Diagnosis() {
       )}
 
       {result && (
-        <div className="bg-[#fff5f5] border border-red-200 rounded-2xl p-4 shadow-sm">
-           <div className="flex items-center gap-4 mb-2">
-            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-              <AlertCircle className="w-6 h-6 text-red-600" />
+        <div className={cn(
+          "bg-surface border rounded-2xl p-6 shadow-sm flex flex-col gap-5",
+          result.status === 'error' ? "border-red-200 bg-red-50" : "border-border"
+        )}>
+          {result.status === 'error' ? (
+             <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                <AlertCircle className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <span className="block text-sm font-semibold text-red-900">Analysis Failed</span>
+                <span className="block text-sm text-red-700">{result.message}</span>
+              </div>
             </div>
-            <div>
-              <span className="block text-sm font-semibold text-red-900">Diagnosis Complete</span>
-            </div>
-          </div>
-          <p className="text-sm text-red-800 ml-16">{result.message}</p>
+          ) : (
+            <>
+              {/* Header */}
+              <div className="flex items-center gap-4 pb-4 border-b border-border">
+                <div className={cn(
+                  "w-12 h-12 rounded-full flex items-center justify-center shrink-0",
+                  result.disease?.toLowerCase().includes("healthy") || result.disease?.toLowerCase().includes("none")
+                    ? "bg-green-100 text-green-700" 
+                    : "bg-amber-100 text-amber-700"
+                )}>
+                  {result.disease?.toLowerCase().includes("healthy") || result.disease?.toLowerCase().includes("none") ? (
+                    <CheckCircle2 className="w-6 h-6" />
+                  ) : (
+                    <ShieldAlert className="w-6 h-6" />
+                  )}
+                </div>
+                <div>
+                  <span className="block text-sm font-medium text-text-muted mb-0.5">Detected Condition</span>
+                  <span className="block text-lg font-bold text-primary leading-tight">{result.disease}</span>
+                </div>
+              </div>
+
+              {/* Confidence & Details */}
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-text-muted" />
+                  <span className="text-sm text-text-muted">AI Confidence:</span>
+                  <span className={cn(
+                    "text-xs font-semibold px-2.5 py-0.5 rounded-full",
+                    result.confidence?.toLowerCase() === 'high' ? "bg-green-100 text-green-700" :
+                    result.confidence?.toLowerCase() === 'medium' ? "bg-amber-100 text-amber-700" :
+                    "bg-red-100 text-red-700"
+                  )}>
+                    {result.confidence}
+                  </span>
+                </div>
+                
+                {result.treatment && result.treatment.length > 0 && (
+                  <div className="mt-2 flex flex-col gap-3">
+                    <div className="flex items-center gap-2 text-primary font-semibold">
+                      <ListChecks className="w-5 h-5" />
+                      <span>Recommended Action Plan</span>
+                    </div>
+                    <ul className="flex flex-col gap-2.5">
+                      {result.treatment.map((step, idx) => (
+                        <li key={idx} className="flex items-start gap-3 text-sm text-text-muted bg-slate-50 dark:bg-slate-800/50 p-3.5 rounded-xl border border-border">
+                          <Check className="w-4 h-4 text-green-600 dark:text-green-500 shrink-0 mt-0.5" />
+                          <span className="leading-relaxed">{step}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
       )}
 

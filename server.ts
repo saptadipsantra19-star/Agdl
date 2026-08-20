@@ -40,12 +40,12 @@ async function startServer() {
         }
       };
 
-      const prompt = `You are an expert plant pathologist. I am providing an image of a leaf from a ${cropType} plant. 
-Please analyze this image and provide:
-1. The most likely disease or issue.
-2. Confidence level (High/Medium/Low).
-3. Recommended treatment or action plan.
-Keep it concise and professional.`;
+      const prompt = `You are an expert plant pathologist. I am providing an image of a leaf from a ${cropType} plant. Please analyze this image and output ONLY a valid JSON object matching this schema (do NOT include markdown codeblocks or any other text):
+{
+  "disease": "Name of the disease (or 'Healthy')",
+  "confidence": "High, Medium, or Low",
+  "treatment": ["Action step 1", "Action step 2"]
+}`;
 
       const fallbackModels = [
         "gemini-3.7-flash",
@@ -54,12 +54,15 @@ Keep it concise and professional.`;
 
       let response;
       let lastError;
-
+      
       for (const modelName of fallbackModels) {
         try {
           response = await ai.models.generateContent({
             model: modelName,
             contents: { parts: [imagePart, { text: prompt }] },
+            config: {
+              responseMimeType: "application/json"
+            }
           });
           break; // Success!
         } catch (error: any) {
@@ -72,7 +75,20 @@ Keep it concise and professional.`;
         throw lastError;
       }
 
-      res.json({ diagnosis: response.text || "Analysis complete but no text generated." });
+      let diagnosisData;
+      try {
+        const rawText = response.text || "{}";
+        diagnosisData = JSON.parse(rawText);
+      } catch (parseError) {
+        console.error("JSON parse error from Gemini output:", parseError);
+        diagnosisData = {
+          disease: "Analysis Complete",
+          confidence: "Medium",
+          treatment: [response.text || "Could not parse analysis."]
+        };
+      }
+
+      res.json({ diagnosis: diagnosisData });
     } catch (error: any) {
       console.error("Diagnosis Error:", error);
       let errorMessage = "Failed to analyze image. Please try again.";
@@ -113,9 +129,7 @@ Keep it concise and professional.`;
 
       const config = {
         systemInstruction: `You are Gemini, an AI agricultural assistant for farmers. Keep answers concise, helpful, and directly related to farming, crops, weather, and yield optimization.
-        
-Current Context: ${context || 'Unknown'}
-
+        Current Context: ${context || 'Unknown'}
 When the user asks to buy agricultural products, seeds, fertilizers, tools, or DL agricultural necessaries, you MUST provide direct search links to Amazon and Flipkart.
 Format the links like this:
 - [Product Name on Amazon](https://www.amazon.in/s?k=product+name)
