@@ -18,9 +18,19 @@ const formatGeminiText = (text: string) => {
 };
 
 export default function AIAssistant() {
-  const [messages, setMessages] = useState<Message[]>([
-    { role: 'model', content: "Hello! I'm Gemini, your AI agricultural assistant. How can I help you improve your farm today?" }
-  ]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const saved = localStorage.getItem('dl_gemini_chat_history');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error("Failed to parse saved chat history", e);
+      }
+    }
+    return [
+      { role: 'model', content: "Hello! I'm Gemini, your AI agricultural assistant. How can I help you improve your farm today?" }
+    ];
+  });
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -33,11 +43,12 @@ export default function AIAssistant() {
 
   useEffect(() => {
     scrollToBottom();
+    localStorage.setItem('dl_gemini_chat_history', JSON.stringify(messages));
   }, [messages]);
 
   useEffect(() => {
     // Initialize Web Speech API
-    const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
       recognition.continuous = false;

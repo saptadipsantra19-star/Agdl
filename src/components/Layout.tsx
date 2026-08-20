@@ -15,6 +15,11 @@ export default function Layout() {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
+  const handleSignOut = () => {
+    localStorage.removeItem('dl_gemini_chat_history');
+    logOut();
+  };
+
   const desktopNavItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
     { name: 'Diagnosis', path: '/diagnosis', icon: Stethoscope },
@@ -109,7 +114,7 @@ export default function Layout() {
               {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
             </button>
             <button
-              onClick={logOut}
+              onClick={handleSignOut}
               className="w-full flex items-center gap-3 text-sm px-4 py-3 rounded-lg transition-all duration-200 text-red-600 hover:bg-red-50 font-medium"
             >
               <LogOut className="w-5 h-5" />
@@ -206,7 +211,7 @@ export default function Layout() {
                 </div>
               </Link>
 
-              <button onClick={() => { logOut(); setShowMobileMore(false); }} className="w-full flex items-center justify-center gap-2 p-4 text-red-600 font-semibold hover:bg-red-50 rounded-xl transition-colors mt-4">
+              <button onClick={() => { handleSignOut(); setShowMobileMore(false); }} className="w-full flex items-center justify-center gap-2 p-4 text-red-600 font-semibold hover:bg-red-50 rounded-xl transition-colors mt-4">
                 <LogOut className="w-5 h-5" />
                 Sign Out
               </button>
