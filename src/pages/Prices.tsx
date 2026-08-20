@@ -1,17 +1,70 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, MapPin, ChevronDown, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function Prices() {
   const [activeFilter, setActiveFilter] = useState('All');
+  const [region, setRegion] = useState('Locating...');
+  const [currency, setCurrency] = useState('₹');
 
   const filters = ['All', 'Cereals', 'Vegetables', 'Fruits', 'Legumes'];
 
+  useEffect(() => {
+    let mounted = true;
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          if (!mounted) return;
+          try {
+            const osmRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
+            const osmData = await osmRes.json();
+            
+            if (osmData && osmData.address && mounted) {
+              const city = osmData.address.city || osmData.address.town || osmData.address.village;
+              const state = osmData.address.state;
+              const country = osmData.address.country;
+              
+              if (city && state) {
+                setRegion(`${city}, ${state}`);
+              } else if (country) {
+                setRegion(country);
+              } else {
+                setRegion('Local Market');
+              }
+              
+              if (country === 'India') setCurrency('₹');
+              else if (country === 'Kenya') setCurrency('Ksh');
+              else if (country === 'United States') setCurrency('$');
+              else setCurrency('₹'); // Default fallback
+              return;
+            }
+            if (mounted) setRegion('Local Market');
+          } catch (e) {
+            if (mounted) setRegion('Local Market');
+          }
+        },
+        () => {
+          if (mounted) setRegion('Local Market');
+        }
+      );
+    } else {
+      setRegion('Local Market');
+    }
+    return () => { mounted = false; };
+  }, []);
+
+  const getPrice = (basePrice: number) => {
+    if (currency === '₹') return `${currency} ${(basePrice * 80).toLocaleString()}`;
+    if (currency === '$') return `${currency} ${(basePrice).toLocaleString()}`;
+    if (currency === 'Ksh') return `${currency} ${(basePrice * 130).toLocaleString()}`;
+    return `${currency} ${(basePrice * 80).toLocaleString()}`;
+  };
+
   const crops = [
-    { name: 'Maize', price: 'Ksh 3,200', unit: '/ 90kg bag', trend: 'up', trendVal: '+2%', category: 'Cereals' },
-    { name: 'Tomato', price: 'Ksh 6,500', unit: '/ crate', trend: 'down', trendVal: '-1.5%', category: 'Vegetables' },
-    { name: 'Potato', price: 'Ksh 4,100', unit: '/ 50kg bag', trend: 'flat', trendVal: '0%', category: 'Vegetables' },
-    { name: 'Beans', price: 'Ksh 9,000', unit: '/ 90kg bag', trend: 'up', trendVal: '+5%', category: 'Legumes' },
+    { name: 'Maize', price: getPrice(25), unit: '/ 90kg bag', trend: 'up', trendVal: '+2%', category: 'Cereals' },
+    { name: 'Tomato', price: getPrice(50), unit: '/ crate', trend: 'down', trendVal: '-1.5%', category: 'Vegetables' },
+    { name: 'Potato', price: getPrice(30), unit: '/ 50kg bag', trend: 'flat', trendVal: '0%', category: 'Vegetables' },
+    { name: 'Beans', price: getPrice(70), unit: '/ 90kg bag', trend: 'up', trendVal: '+5%', category: 'Legumes' },
   ];
 
   const filteredCrops = activeFilter === 'All' ? crops : crops.filter(c => c.category === activeFilter);
@@ -46,7 +99,7 @@ export default function Prices() {
             </div>
             <div>
               <p className="text-xs font-semibold text-text-muted uppercase tracking-wider">Current Region</p>
-              <p className="text-sm font-bold text-primary">Nakuru, Kenya</p>
+              <p className="text-sm font-bold text-primary">{region}</p>
             </div>
           </div>
           <button className="w-10 h-10 flex items-center justify-center text-text-muted hover:bg-slate-100 rounded-full transition-colors">
