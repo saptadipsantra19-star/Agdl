@@ -11,7 +11,9 @@ export default function AIAssistant() {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -20,6 +22,54 @@ export default function AIAssistant() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    // Initialize Web Speech API
+    const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US'; // Or support other languages
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setInput((prev) => prev + (prev ? " " : "") + transcript);
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+    }
+  }, []);
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) {
+      alert("Your browser does not support Voice input. Please try Chrome or Safari.");
+      return;
+    }
+    
+    if (isListening) {
+      recognitionRef.current.stop();
+    } else {
+      try {
+        recognitionRef.current.start();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
 
   const handleSend = async (text: string) => {
     if (!text.trim()) return;
@@ -173,7 +223,11 @@ export default function AIAssistant() {
       {/* Chat Input Area */}
       <div className="fixed md:absolute bottom-[80px] md:bottom-0 left-0 md:left-64 w-full md:w-[calc(100%-256px)] bg-background border-t border-border px-4 py-4 z-40">
         <div className="max-w-3xl mx-auto flex items-center gap-3 bg-surface border border-border rounded-full p-2 shadow-sm focus-within:border-[#012d1d] focus-within:ring-1 focus-within:ring-[#012d1d] transition-shadow">
-          <button className="w-10 h-10 flex items-center justify-center text-text-muted hover:text-primary hover:bg-slate-100 rounded-full transition-all shrink-0">
+          <button 
+            onClick={toggleListening}
+            title="Voice Input"
+            className={`w-10 h-10 flex items-center justify-center rounded-full transition-all shrink-0 ${isListening ? 'text-white bg-red-500 animate-pulse' : 'text-text-muted hover:text-primary hover:bg-slate-100'}`}
+          >
             <Mic className="w-5 h-5" />
           </button>
           <input 
