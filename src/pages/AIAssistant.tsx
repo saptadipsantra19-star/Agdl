@@ -1,6 +1,7 @@
 import { ArrowLeft, Sparkles, Send, Mic, FlaskConical, Droplets, BarChart3, Bug, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 type Message = { role: 'user' | 'model'; content: string };
 
@@ -108,7 +109,22 @@ export default function AIAssistant() {
                   ? 'bg-primary text-on-primary rounded-tr-none border-primary' 
                   : 'bg-surface text-text-main rounded-tl-none border-border'
               }`}>
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                {msg.role === 'user' ? (
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                ) : (
+                  <ReactMarkdown
+                    components={{
+                      a: ({ node, ...props }) => <a {...props} className="text-blue-600 font-bold hover:underline" target="_blank" rel="noopener noreferrer" />,
+                      strong: ({ node, ...props }) => <strong {...props} className="font-bold" />,
+                      p: ({ node, ...props }) => <p {...props} className="text-sm leading-relaxed whitespace-pre-wrap mb-3 last:mb-0" />,
+                      ul: ({ node, ...props }) => <ul {...props} className="list-disc pl-5 mb-3 text-sm" />,
+                      ol: ({ node, ...props }) => <ol {...props} className="list-decimal pl-5 mb-3 text-sm" />,
+                      li: ({ node, ...props }) => <li {...props} className="mb-1 text-sm" />
+                    }}
+                  >
+                    {msg.content}
+                  </ReactMarkdown>
+                )}
               </div>
             </div>
           ))}
