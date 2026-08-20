@@ -47,40 +47,39 @@ Please analyze this image and provide:
 3. Recommended treatment or action plan.
 Keep it concise and professional.`;
 
-      let response;
-      let retries = 3;
-      let delay = 1500;
+      const fallbackModels = [
+        "gemini-3.7-flash",
+        "gemini-2.5-flash",
+        "gemini-2.0-flash",
+        "gemini-1.5-flash",
+        "gemini-1.5-flash-8b"
+      ];
 
-      while (retries >= 0) {
+      let response;
+      let lastError;
+
+      for (const modelName of fallbackModels) {
         try {
           response = await ai.models.generateContent({
-            model: "gemini-3.7-flash",
+            model: modelName,
             contents: { parts: [imagePart, { text: prompt }] },
           });
           break; // Success!
         } catch (error: any) {
-          if (retries === 0) {
-            throw error;
-          }
-          
-          if (error.status === 503 || error.message?.includes("503") || error.message?.includes("UNAVAILABLE") || error.message?.includes("high demand") || error.status === 429) {
-            await new Promise(resolve => setTimeout(resolve, delay));
-            delay *= 2; // Exponential backoff
-            retries--;
-          } else {
-            throw error;
-          }
+          console.warn(`Model ${modelName} failed, trying next...`);
+          lastError = error;
         }
       }
 
-      res.json({ diagnosis: response?.text || "Analysis complete but no text generated." });
+      if (!response) {
+        throw lastError;
+      }
+
+      res.json({ diagnosis: response.text || "Analysis complete but no text generated." });
     } catch (error: any) {
       console.error("Diagnosis Error:", error);
       let errorMessage = "Failed to analyze image. Please try again.";
-      if (error.message && error.message.includes("high demand")) {
-        errorMessage = "The AI system is currently experiencing exceptionally high demand. Please wait a few seconds and try again.";
-      } else if (error.message) {
-        // Try to parse out ugly JSON errors if they got stringified
+      if (error.message) {
         try {
            const parsed = JSON.parse(error.message);
            if (parsed.error && parsed.error.message) errorMessage = parsed.error.message;
@@ -126,42 +125,36 @@ Format the links like this:
 - [Product Name on Flipkart](https://www.flipkart.com/search?q=product+name)`,
       };
 
-      // Automatic Model Selection
-      // If the prompt is complex (long text, lots of context), use the advanced model
-      // Otherwise, use the fast/lite model for instant responses
-      const latestMessage = messages[messages.length - 1].content;
-      const isComplexQuery = latestMessage.length > 100 || latestMessage.toLowerCase().includes('diagnose') || latestMessage.toLowerCase().includes('analyze');
-      
-      const selectedModel = isComplexQuery ? "gemini-3.7-flash" : "gemini-3.6-flash";
+      const fallbackModels = [
+        "gemini-3.7-flash",
+        "gemini-2.5-flash",
+        "gemini-2.0-flash",
+        "gemini-1.5-flash",
+        "gemini-1.5-flash-8b"
+      ];
 
       let response;
-      let retries = 2;
-      let delay = 1000;
+      let lastError;
       
-      while (retries >= 0) {
+      for (const modelName of fallbackModels) {
         try {
           response = await ai.models.generateContent({
-            model: selectedModel,
+            model: modelName,
             contents,
             config
           });
           break; // Success!
         } catch (error: any) {
-          if (retries === 0) {
-            throw error; // All retries failed
-          }
-          
-          if (error.status === 503 || error.message?.includes("503") || error.message?.includes("UNAVAILABLE") || error.message?.includes("high demand") || error.status === 429) {
-            await new Promise(resolve => setTimeout(resolve, delay));
-            delay *= 2; // Exponential backoff
-            retries--;
-          } else {
-            throw error;
-          }
+          console.warn(`Model ${modelName} failed, trying next...`);
+          lastError = error;
         }
       }
 
-      res.json({ text: response?.text || "Sorry, I couldn't generate a response." });
+      if (!response) {
+        throw lastError;
+      }
+
+      res.json({ text: response.text || "Sorry, I couldn't generate a response." });
     } catch (error: any) {
       console.error("AI Error:", error);
       res.status(500).json({ error: error.message });
