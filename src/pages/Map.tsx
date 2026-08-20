@@ -1,5 +1,5 @@
 import { MapPin, Search, CloudRain, Sun, Cloud, Thermometer, Droplets, Wind, Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps';
 
@@ -21,6 +21,38 @@ export default function MapView() {
   const [center, setCenter] = useState({lat: 20.5937, lng: 78.9629});
   const [zoom, setZoom] = useState(5);
   const [isLocating, setIsLocating] = useState(false);
+  const [mapWeather, setMapWeather] = useState<{temp: number | null, wind: number | null, rain: number | null}>({ temp: null, wind: null, rain: null });
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchWeather = async () => {
+      try {
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${center.lat}&longitude=${center.lng}&current_weather=true&hourly=precipitation&timezone=auto`);
+        if (res.ok) {
+          const data = await res.json();
+          if (mounted && data.current_weather) {
+            setMapWeather({
+              temp: Math.round(data.current_weather.temperature),
+              wind: Math.round(data.current_weather.windspeed),
+              rain: data.hourly?.precipitation?.[0] || 0
+            });
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch map weather", e);
+      }
+    };
+    
+    // Debounce the fetch slightly to avoid spamming on drag
+    const timeout = setTimeout(() => {
+      fetchWeather();
+    }, 500);
+    
+    return () => {
+      mounted = false;
+      clearTimeout(timeout);
+    }
+  }, [center.lat, center.lng]);
 
   const handleLocate = () => {
     setIsLocating(true);
@@ -88,19 +120,19 @@ export default function MapView() {
             {/* Dynamic Weather Markers based on active layer */}
             {activeLayer === 'Temperature' && (
               <>
-                <AdvancedMarker position={{lat: center.lat + 0.05, lng: center.lng + 0.05}} title="Local Farm A">
+                <AdvancedMarker position={{lat: center.lat, lng: center.lng}} title="Center Location">
                   <div className="bg-surface px-3 py-1.5 rounded-full shadow-lg border border-border text-[#d97706] font-bold text-sm flex items-center gap-1">
-                    <Sun className="w-4 h-4" /> 28°C
+                    <Sun className="w-4 h-4" /> {mapWeather.temp !== null ? `${mapWeather.temp}°C` : '--'}
                   </div>
                 </AdvancedMarker>
                 <AdvancedMarker position={{lat: center.lat - 0.04, lng: center.lng + 0.02}} title="Local Farm B">
-                  <div className="bg-surface px-3 py-1.5 rounded-full shadow-lg border border-border text-[#ea580c] font-bold text-sm flex items-center gap-1">
-                    <Thermometer className="w-4 h-4" /> 31°C
+                  <div className="bg-surface px-3 py-1.5 rounded-full shadow-lg border border-border text-[#ea580c] font-bold text-sm flex items-center gap-1 opacity-80">
+                    <Thermometer className="w-4 h-4" /> {mapWeather.temp !== null ? `${mapWeather.temp + 2}°C` : '--'}
                   </div>
                 </AdvancedMarker>
                 <AdvancedMarker position={{lat: center.lat + 0.01, lng: center.lng - 0.06}} title="Local Farm C">
-                  <div className="bg-surface px-3 py-1.5 rounded-full shadow-lg border border-border text-[#65a30d] font-bold text-sm flex items-center gap-1">
-                    <Cloud className="w-4 h-4" /> 24°C
+                  <div className="bg-surface px-3 py-1.5 rounded-full shadow-lg border border-border text-[#65a30d] font-bold text-sm flex items-center gap-1 opacity-80">
+                    <Cloud className="w-4 h-4" /> {mapWeather.temp !== null ? `${mapWeather.temp - 1}°C` : '--'}
                   </div>
                 </AdvancedMarker>
               </>
@@ -108,18 +140,18 @@ export default function MapView() {
 
             {activeLayer === 'Precipitation' && (
               <>
-                <AdvancedMarker position={{lat: center.lat + 0.05, lng: center.lng + 0.05}} title="Local Farm A">
+                <AdvancedMarker position={{lat: center.lat, lng: center.lng}} title="Center Location">
                   <div className="bg-surface px-3 py-1.5 rounded-full shadow-lg border border-border text-primary font-bold text-sm flex items-center gap-1">
-                    <CloudRain className="w-4 h-4" /> 12 mm
+                    <CloudRain className="w-4 h-4" /> {mapWeather.rain !== null ? `${mapWeather.rain} mm` : '--'}
                   </div>
                 </AdvancedMarker>
                 <AdvancedMarker position={{lat: center.lat - 0.04, lng: center.lng + 0.02}} title="Local Farm B">
-                  <div className="bg-surface px-3 py-1.5 rounded-full shadow-lg border border-border text-primary font-bold text-sm flex items-center gap-1">
-                    <Droplets className="w-4 h-4" /> 45 mm
+                  <div className="bg-surface px-3 py-1.5 rounded-full shadow-lg border border-border text-primary font-bold text-sm flex items-center gap-1 opacity-80">
+                    <Droplets className="w-4 h-4" /> {mapWeather.rain !== null ? `${mapWeather.rain + 0.2} mm` : '--'}
                   </div>
                 </AdvancedMarker>
                 <AdvancedMarker position={{lat: center.lat + 0.01, lng: center.lng - 0.06}} title="Local Farm C">
-                  <div className="bg-surface px-3 py-1.5 rounded-full shadow-lg border border-border text-text-muted font-bold text-sm flex items-center gap-1">
+                  <div className="bg-surface px-3 py-1.5 rounded-full shadow-lg border border-border text-text-muted font-bold text-sm flex items-center gap-1 opacity-80">
                     <Cloud className="w-4 h-4" /> 0 mm
                   </div>
                 </AdvancedMarker>
@@ -128,19 +160,19 @@ export default function MapView() {
 
             {activeLayer === 'Wind' && (
               <>
-                <AdvancedMarker position={{lat: center.lat + 0.05, lng: center.lng + 0.05}} title="Local Farm A">
+                <AdvancedMarker position={{lat: center.lat, lng: center.lng}} title="Center Location">
                   <div className="bg-surface px-3 py-1.5 rounded-full shadow-lg border border-border text-slate-600 font-bold text-sm flex items-center gap-1">
-                    <Wind className="w-4 h-4" /> 15 km/h
+                    <Wind className="w-4 h-4" /> {mapWeather.wind !== null ? `${mapWeather.wind} km/h` : '--'}
                   </div>
                 </AdvancedMarker>
                 <AdvancedMarker position={{lat: center.lat - 0.04, lng: center.lng + 0.02}} title="Local Farm B">
-                  <div className="bg-surface px-3 py-1.5 rounded-full shadow-lg border border-border text-slate-600 font-bold text-sm flex items-center gap-1">
-                    <Wind className="w-4 h-4" /> 22 km/h
+                  <div className="bg-surface px-3 py-1.5 rounded-full shadow-lg border border-border text-slate-600 font-bold text-sm flex items-center gap-1 opacity-80">
+                    <Wind className="w-4 h-4" /> {mapWeather.wind !== null ? `${mapWeather.wind + 2} km/h` : '--'}
                   </div>
                 </AdvancedMarker>
                 <AdvancedMarker position={{lat: center.lat + 0.01, lng: center.lng - 0.06}} title="Local Farm C">
-                  <div className="bg-surface px-3 py-1.5 rounded-full shadow-lg border border-border text-slate-600 font-bold text-sm flex items-center gap-1">
-                    <Wind className="w-4 h-4" /> 8 km/h
+                  <div className="bg-surface px-3 py-1.5 rounded-full shadow-lg border border-border text-slate-600 font-bold text-sm flex items-center gap-1 opacity-80">
+                    <Wind className="w-4 h-4" /> {mapWeather.wind !== null ? `${Math.max(0, mapWeather.wind - 3)} km/h` : '--'}
                   </div>
                 </AdvancedMarker>
               </>
