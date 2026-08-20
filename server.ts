@@ -2,12 +2,62 @@ import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
+import multer from "multer";
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 async function startServer() {
   const app = express();
   const PORT = 3000;
 
   app.use(express.json());
+
+  // Diagnosis Route
+  app.post("/api/diagnose", upload.single('image'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No image file provided" });
+      }
+      
+      const cropType = req.body.cropType;
+      if (!cropType) {
+        return res.status(400).json({ error: "Crop type is required" });
+      }
+
+      const ai = new GoogleGenAI({
+        apiKey: process.env.GEMINI_API_KEY,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          }
+        }
+      });
+
+      const imagePart = {
+        inlineData: {
+          data: req.file.buffer.toString("base64"),
+          mimeType: req.file.mimetype
+        }
+      };
+
+      const prompt = `You are an expert plant pathologist. I am providing an image of a leaf from a ${cropType} plant. 
+Please analyze this image and provide:
+1. The most likely disease or issue.
+2. Confidence level (High/Medium/Low).
+3. Recommended treatment or action plan.
+Keep it concise and professional.`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3.7-flash",
+        contents: { parts: [imagePart, { text: prompt }] },
+      });
+
+      res.json({ diagnosis: response.text });
+    } catch (error: any) {
+      console.error("Diagnosis Error:", error);
+      res.status(500).json({ error: error.message || "Failed to analyze image" });
+    }
+  });
 
   // AI Route
   app.post("/api/gemini/chat", async (req, res) => {
