@@ -7,7 +7,7 @@ export default function Prices() {
   const [region, setRegion] = useState('Locating...');
   const [currency, setCurrency] = useState('₹');
 
-  const filters = ['All', 'Cereals', 'Vegetables', 'Fruits', 'Legumes'];
+  const filters = ['All', 'Cereals', 'Vegetables', 'Fruits', 'Legumes', 'Spices', 'Cash Crops'];
 
   useEffect(() => {
     let mounted = true;
@@ -60,11 +60,75 @@ export default function Prices() {
     return `${currency} ${(basePrice * 80).toLocaleString()}`;
   };
 
+  const getEmoji = (name: string) => {
+    const emojiMap: Record<string, string> = {
+      'Rice / Paddy': '🌾',
+      'Wheat': '🌾',
+      'Maize / Corn': '🌽',
+      'Pearl Millet / Bajra': '🌾',
+      'Sorghum / Jowar': '🌾',
+      'Finger Millet / Ragi': '🌾',
+      'Green Gram / Moong Dal': '🫘',
+      'Black Gram / Urad Dal': '🫘',
+      'Lentil / Masoor Dal': '🫘',
+      'Mustard (Leaf)': '🥬',
+      'Mustard Seed': '🟡',
+      'Sunflower': '🌻',
+      'Sesame / Til': '🌱',
+      'Potato': '🥔',
+      'Tomato': '🍅',
+      'Carrot': '🥕',
+      'Radish / Mooli': '🥕',
+      'Spinach / Palak': '🥬',
+      'Peas / Matar': '🫛',
+      'Garlic': '🧄',
+      'Turmeric / Haldi': '🧅',
+      'Ginger / Adrak': '🫚',
+      'Coriander / Dhania': '🌿',
+      'Papaya': '🍈',
+      'Guava': '🍐',
+      'Grapes': '🍇',
+      'Pomegranate / Anar': '🍎',
+      'Watermelon': '🍉',
+      'Coconut': '🥥',
+      'Jute': '🎋',
+      'Tea': '🍵',
+    };
+    return emojiMap[name] || '🌱';
+  };
+
   const crops = [
-    { name: 'Maize', price: getPrice(25), unit: '/ 90kg bag', trend: 'up', trendVal: '+2%', category: 'Cereals' },
-    { name: 'Tomato', price: getPrice(50), unit: '/ crate', trend: 'down', trendVal: '-1.5%', category: 'Vegetables' },
+    { name: 'Rice / Paddy', price: getPrice(40), unit: '/ 100kg bag', trend: 'up', trendVal: '+1.5%', category: 'Cereals' },
+    { name: 'Wheat', price: getPrice(30), unit: '/ 100kg bag', trend: 'down', trendVal: '-0.5%', category: 'Cereals' },
+    { name: 'Maize / Corn', price: getPrice(25), unit: '/ 90kg bag', trend: 'up', trendVal: '+2%', category: 'Cereals' },
+    { name: 'Pearl Millet / Bajra', price: getPrice(35), unit: '/ 100kg bag', trend: 'flat', trendVal: '0%', category: 'Cereals' },
+    { name: 'Sorghum / Jowar', price: getPrice(35), unit: '/ 100kg bag', trend: 'up', trendVal: '+1.2%', category: 'Cereals' },
+    { name: 'Finger Millet / Ragi', price: getPrice(50), unit: '/ 100kg bag', trend: 'up', trendVal: '+3%', category: 'Cereals' },
+    { name: 'Green Gram / Moong Dal', price: getPrice(120), unit: '/ 100kg bag', trend: 'down', trendVal: '-1%', category: 'Legumes' },
+    { name: 'Black Gram / Urad Dal', price: getPrice(110), unit: '/ 100kg bag', trend: 'flat', trendVal: '0%', category: 'Legumes' },
+    { name: 'Lentil / Masoor Dal', price: getPrice(100), unit: '/ 100kg bag', trend: 'up', trendVal: '+2.5%', category: 'Legumes' },
+    { name: 'Mustard (Leaf)', price: getPrice(10), unit: '/ crate', trend: 'down', trendVal: '-2%', category: 'Vegetables' },
+    { name: 'Mustard Seed', price: getPrice(80), unit: '/ 100kg bag', trend: 'up', trendVal: '+1.8%', category: 'Cash Crops' },
+    { name: 'Sunflower', price: getPrice(60), unit: '/ 100kg bag', trend: 'flat', trendVal: '0%', category: 'Cash Crops' },
+    { name: 'Sesame / Til', price: getPrice(150), unit: '/ 100kg bag', trend: 'up', trendVal: '+4%', category: 'Cash Crops' },
     { name: 'Potato', price: getPrice(30), unit: '/ 50kg bag', trend: 'flat', trendVal: '0%', category: 'Vegetables' },
-    { name: 'Beans', price: getPrice(70), unit: '/ 90kg bag', trend: 'up', trendVal: '+5%', category: 'Legumes' },
+    { name: 'Tomato', price: getPrice(50), unit: '/ crate', trend: 'down', trendVal: '-1.5%', category: 'Vegetables' },
+    { name: 'Carrot', price: getPrice(40), unit: '/ 50kg bag', trend: 'up', trendVal: '+1%', category: 'Vegetables' },
+    { name: 'Radish / Mooli', price: getPrice(30), unit: '/ 50kg bag', trend: 'down', trendVal: '-3%', category: 'Vegetables' },
+    { name: 'Spinach / Palak', price: getPrice(15), unit: '/ crate', trend: 'flat', trendVal: '0%', category: 'Vegetables' },
+    { name: 'Peas / Matar', price: getPrice(80), unit: '/ 50kg bag', trend: 'up', trendVal: '+2%', category: 'Vegetables' },
+    { name: 'Garlic', price: getPrice(100), unit: '/ 50kg bag', trend: 'up', trendVal: '+5%', category: 'Spices' },
+    { name: 'Turmeric / Haldi', price: getPrice(150), unit: '/ 100kg bag', trend: 'flat', trendVal: '0%', category: 'Spices' },
+    { name: 'Ginger / Adrak', price: getPrice(90), unit: '/ 50kg bag', trend: 'down', trendVal: '-1.5%', category: 'Spices' },
+    { name: 'Coriander / Dhania', price: getPrice(50), unit: '/ 50kg bag', trend: 'up', trendVal: '+2%', category: 'Spices' },
+    { name: 'Papaya', price: getPrice(50), unit: '/ crate', trend: 'flat', trendVal: '0%', category: 'Fruits' },
+    { name: 'Guava', price: getPrice(60), unit: '/ crate', trend: 'up', trendVal: '+1%', category: 'Fruits' },
+    { name: 'Grapes', price: getPrice(30), unit: '/ 20kg box', trend: 'down', trendVal: '-4%', category: 'Fruits' },
+    { name: 'Pomegranate / Anar', price: getPrice(40), unit: '/ 20kg box', trend: 'up', trendVal: '+3%', category: 'Fruits' },
+    { name: 'Watermelon', price: getPrice(5), unit: '/ piece', trend: 'flat', trendVal: '0%', category: 'Fruits' },
+    { name: 'Coconut', price: getPrice(40), unit: '/ 100 pieces', trend: 'up', trendVal: '+1.5%', category: 'Cash Crops' },
+    { name: 'Jute', price: getPrice(60), unit: '/ 100kg bale', trend: 'flat', trendVal: '0%', category: 'Cash Crops' },
+    { name: 'Tea', price: getPrice(150), unit: '/ 50kg bag', trend: 'up', trendVal: '+2.5%', category: 'Cash Crops' },
   ];
 
   const filteredCrops = activeFilter === 'All' ? crops : crops.filter(c => c.category === activeFilter);
@@ -132,10 +196,7 @@ export default function Prices() {
           <div key={crop.name} className="bg-surface rounded-2xl p-4 shadow-sm border border-border flex items-center justify-between hover:shadow-md hover:border-[#012d1d]/30 transition-all cursor-pointer group">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center border border-border overflow-hidden text-2xl group-hover:scale-105 transition-transform">
-                {crop.name === 'Maize' && '🌽'}
-                {crop.name === 'Tomato' && '🍅'}
-                {crop.name === 'Potato' && '🥔'}
-                {crop.name === 'Beans' && '🫘'}
+                {getEmoji(crop.name)}
               </div>
               <div>
                 <h3 className="text-lg font-bold text-primary">{crop.name}</h3>
