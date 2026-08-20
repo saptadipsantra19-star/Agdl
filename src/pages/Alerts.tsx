@@ -1,7 +1,11 @@
-import { AlertTriangle, Droplets, Wind, Sun, Thermometer, Bug, Snowflake } from 'lucide-react';
+import { AlertTriangle, Droplets, Wind, Sun, Thermometer, Bug, Snowflake, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 
 export default function Alerts() {
+  // Use state to manage alerts so it's not permanently hardcoded to a thunderstorm
+  const [activeAlert, setActiveAlert] = useState<{title: string, desc: string, action: string, type: 'danger' | 'warning' | 'info'} | null>(null);
+
   return (
     <div className="flex flex-col gap-6 pt-16 md:pt-8 px-4 md:px-8 max-w-5xl mx-auto pb-12">
       <header className="md:hidden fixed top-0 left-0 w-full bg-surface z-30 h-14 flex items-center px-4 border-b border-border">
@@ -13,16 +17,32 @@ export default function Alerts() {
       </div>
 
       {/* High Priority Alert Card */}
-      <div className="bg-[#ffdad6] border border-[#ba1a1a] rounded-2xl p-6 flex items-start gap-4 shadow-sm">
-        <AlertTriangle className="w-8 h-8 text-[#ba1a1a] shrink-0" fill="currentColor" />
-        <div className="flex-1">
-          <h2 className="text-xl font-semibold text-[#93000a] mb-1">Thunderstorm Alert</h2>
-          <p className="text-sm text-[#414844] mb-3">Severe thunderstorm expected in 45 minutes. High winds and heavy rainfall likely.</p>
-          <div className="bg-surface/80 rounded-xl p-3 border border-red-200 flex items-center gap-2">
-            <span className="text-sm font-semibold text-[#7f5539]">Suggested Action: Cover young seedlings immediately.</span>
+      {activeAlert ? (
+        <div className={`border rounded-2xl p-6 flex items-start gap-4 shadow-sm ${
+          activeAlert.type === 'danger' ? 'bg-[#ffdad6] border-[#ba1a1a]' : 'bg-orange-50 border-orange-200'
+        }`}>
+          <AlertTriangle className={`w-8 h-8 shrink-0 ${activeAlert.type === 'danger' ? 'text-[#ba1a1a]' : 'text-orange-500'}`} fill="currentColor" />
+          <div className="flex-1">
+            <h2 className={`text-xl font-semibold mb-1 ${activeAlert.type === 'danger' ? 'text-[#93000a]' : 'text-orange-800'}`}>
+              {activeAlert.title}
+            </h2>
+            <p className="text-sm text-[#414844] mb-3">{activeAlert.desc}</p>
+            {activeAlert.action && (
+              <div className="bg-surface/80 rounded-xl p-3 border border-red-200 flex items-center gap-2">
+                <span className="text-sm font-semibold text-[#7f5539]">Suggested Action: {activeAlert.action}</span>
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="bg-[#c4eed0] border border-[#0f5223] rounded-2xl p-6 flex items-center gap-4 shadow-sm">
+          <CheckCircle className="w-8 h-8 text-[#0f5223] shrink-0" />
+          <div className="flex-1">
+            <h2 className="text-xl font-semibold text-[#0f5223] mb-1">No Active Severe Alerts</h2>
+            <p className="text-sm text-[#0f5223]">Weather and crop conditions are stable. No immediate actions required.</p>
+          </div>
+        </div>
+      )}
 
       {/* Weather Climate Section */}
       <div>
