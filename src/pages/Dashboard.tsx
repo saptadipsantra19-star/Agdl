@@ -6,20 +6,73 @@ import { useState, useEffect } from 'react';
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const [region, setRegion] = useState('Loading...');
+  const [region, setRegion] = useState('Locating...');
 
   useEffect(() => {
+    let mounted = true;
+    
+    // First check profile
     if (user) {
       getDoc(doc(db, 'users', user.uid)).then(docSnap => {
-        if (docSnap.exists()) {
-          setRegion(docSnap.data().region || 'Your Farm');
-        } else {
-          setRegion('Your Farm');
+        if (docSnap.exists() && mounted) {
+          const profileRegion = docSnap.data().region;
+          if (profileRegion && profileRegion !== 'Unknown' && profileRegion !== 'Locating...') {
+            setRegion(profileRegion);
+          }
         }
-      }).catch(() => {
-        setRegion('Your Farm');
       });
     }
+
+    // Try geolocation
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          if (!mounted) return;
+          try {
+            // First try Google Maps if key exists
+            const apiKey = import.meta.env.VITE_GOOGLE_MAPS_PLATFORM_KEY;
+            if (apiKey) {
+              const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${position.coords.latitude},${position.coords.longitude}&key=${apiKey}`);
+              const data = await res.json();
+              if (data.results && data.results.length > 0) {
+                const city = data.results[0].address_components.find((ac: any) => ac.types.includes('locality'))?.long_name;
+                const state = data.results[0].address_components.find((ac: any) => ac.types.includes('administrative_area_level_1'))?.short_name;
+                if (city && state && mounted) {
+                  setRegion(`${city}, ${state}`);
+                  return;
+                }
+              }
+            }
+            
+            // Fallback to free OpenStreetMap API (Nominatim)
+            const osmRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
+            const osmData = await osmRes.json();
+            if (osmData && osmData.address && mounted) {
+               const city = osmData.address.city || osmData.address.town || osmData.address.village;
+               const state = osmData.address.state;
+               if (city && state) {
+                 setRegion(`${city}, ${state}`);
+                 return;
+               }
+            }
+            
+            if (mounted) setRegion('Local Farm');
+          } catch (e) {
+            if (mounted) setRegion('Local Farm');
+          }
+        },
+        () => {
+          if (mounted) {
+             setRegion((prev) => prev === 'Locating...' || prev === 'Unknown' ? 'Your Farm' : prev);
+          }
+        },
+        { timeout: 10000 }
+      );
+    } else {
+       setRegion('Your Farm');
+    }
+    
+    return () => { mounted = false; };
   }, [user]);
   
   return (

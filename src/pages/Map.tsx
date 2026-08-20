@@ -85,22 +85,66 @@ export default function MapView() {
             style={{width: '100%', height: '100%'}}
             disableDefaultUI={true}
           >
-            {/* Dynamic Weather Markers based on current center */}
-            <AdvancedMarker position={{lat: center.lat + 0.05, lng: center.lng + 0.05}} title="Local Farm A">
-               <div className="bg-surface p-2 rounded-full shadow-lg border border-border text-[#7f5539]">
-                 <Sun className="w-5 h-5" />
-               </div>
-            </AdvancedMarker>
-            <AdvancedMarker position={{lat: center.lat - 0.04, lng: center.lng + 0.02}} title="Local Farm B">
-               <div className="bg-surface p-2 rounded-full shadow-lg border border-border text-primary">
-                 <CloudRain className="w-5 h-5" />
-               </div>
-            </AdvancedMarker>
-            <AdvancedMarker position={{lat: center.lat + 0.01, lng: center.lng - 0.06}} title="Local Farm C">
-               <div className="bg-surface p-2 rounded-full shadow-lg border border-border text-text-muted">
-                 <Cloud className="w-5 h-5" />
-               </div>
-            </AdvancedMarker>
+            {/* Dynamic Weather Markers based on active layer */}
+            {activeLayer === 'Temperature' && (
+              <>
+                <AdvancedMarker position={{lat: center.lat + 0.05, lng: center.lng + 0.05}} title="Local Farm A">
+                  <div className="bg-surface px-3 py-1.5 rounded-full shadow-lg border border-border text-[#d97706] font-bold text-sm flex items-center gap-1">
+                    <Sun className="w-4 h-4" /> 28°C
+                  </div>
+                </AdvancedMarker>
+                <AdvancedMarker position={{lat: center.lat - 0.04, lng: center.lng + 0.02}} title="Local Farm B">
+                  <div className="bg-surface px-3 py-1.5 rounded-full shadow-lg border border-border text-[#ea580c] font-bold text-sm flex items-center gap-1">
+                    <Thermometer className="w-4 h-4" /> 31°C
+                  </div>
+                </AdvancedMarker>
+                <AdvancedMarker position={{lat: center.lat + 0.01, lng: center.lng - 0.06}} title="Local Farm C">
+                  <div className="bg-surface px-3 py-1.5 rounded-full shadow-lg border border-border text-[#65a30d] font-bold text-sm flex items-center gap-1">
+                    <Cloud className="w-4 h-4" /> 24°C
+                  </div>
+                </AdvancedMarker>
+              </>
+            )}
+
+            {activeLayer === 'Precipitation' && (
+              <>
+                <AdvancedMarker position={{lat: center.lat + 0.05, lng: center.lng + 0.05}} title="Local Farm A">
+                  <div className="bg-surface px-3 py-1.5 rounded-full shadow-lg border border-border text-primary font-bold text-sm flex items-center gap-1">
+                    <CloudRain className="w-4 h-4" /> 12 mm
+                  </div>
+                </AdvancedMarker>
+                <AdvancedMarker position={{lat: center.lat - 0.04, lng: center.lng + 0.02}} title="Local Farm B">
+                  <div className="bg-surface px-3 py-1.5 rounded-full shadow-lg border border-border text-primary font-bold text-sm flex items-center gap-1">
+                    <Droplets className="w-4 h-4" /> 45 mm
+                  </div>
+                </AdvancedMarker>
+                <AdvancedMarker position={{lat: center.lat + 0.01, lng: center.lng - 0.06}} title="Local Farm C">
+                  <div className="bg-surface px-3 py-1.5 rounded-full shadow-lg border border-border text-text-muted font-bold text-sm flex items-center gap-1">
+                    <Cloud className="w-4 h-4" /> 0 mm
+                  </div>
+                </AdvancedMarker>
+              </>
+            )}
+
+            {activeLayer === 'Wind' && (
+              <>
+                <AdvancedMarker position={{lat: center.lat + 0.05, lng: center.lng + 0.05}} title="Local Farm A">
+                  <div className="bg-surface px-3 py-1.5 rounded-full shadow-lg border border-border text-slate-600 font-bold text-sm flex items-center gap-1">
+                    <Wind className="w-4 h-4" /> 15 km/h
+                  </div>
+                </AdvancedMarker>
+                <AdvancedMarker position={{lat: center.lat - 0.04, lng: center.lng + 0.02}} title="Local Farm B">
+                  <div className="bg-surface px-3 py-1.5 rounded-full shadow-lg border border-border text-slate-600 font-bold text-sm flex items-center gap-1">
+                    <Wind className="w-4 h-4" /> 22 km/h
+                  </div>
+                </AdvancedMarker>
+                <AdvancedMarker position={{lat: center.lat + 0.01, lng: center.lng - 0.06}} title="Local Farm C">
+                  <div className="bg-surface px-3 py-1.5 rounded-full shadow-lg border border-border text-slate-600 font-bold text-sm flex items-center gap-1">
+                    <Wind className="w-4 h-4" /> 8 km/h
+                  </div>
+                </AdvancedMarker>
+              </>
+            )}
           </Map>
         </APIProvider>
       </div>
