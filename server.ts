@@ -47,15 +47,48 @@ Please analyze this image and provide:
 3. Recommended treatment or action plan.
 Keep it concise and professional.`;
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3.7-flash",
-        contents: { parts: [imagePart, { text: prompt }] },
-      });
+      let response;
+      let retries = 3;
+      let delay = 1500;
 
-      res.json({ diagnosis: response.text });
+      while (retries >= 0) {
+        try {
+          response = await ai.models.generateContent({
+            model: "gemini-3.7-flash",
+            contents: { parts: [imagePart, { text: prompt }] },
+          });
+          break; // Success!
+        } catch (error: any) {
+          if (retries === 0) {
+            throw error;
+          }
+          
+          if (error.status === 503 || error.message?.includes("503") || error.message?.includes("UNAVAILABLE") || error.message?.includes("high demand") || error.status === 429) {
+            await new Promise(resolve => setTimeout(resolve, delay));
+            delay *= 2; // Exponential backoff
+            retries--;
+          } else {
+            throw error;
+          }
+        }
+      }
+
+      res.json({ diagnosis: response?.text || "Analysis complete but no text generated." });
     } catch (error: any) {
       console.error("Diagnosis Error:", error);
-      res.status(500).json({ error: error.message || "Failed to analyze image" });
+      let errorMessage = "Failed to analyze image. Please try again.";
+      if (error.message && error.message.includes("high demand")) {
+        errorMessage = "The AI system is currently experiencing exceptionally high demand. Please wait a few seconds and try again.";
+      } else if (error.message) {
+        // Try to parse out ugly JSON errors if they got stringified
+        try {
+           const parsed = JSON.parse(error.message);
+           if (parsed.error && parsed.error.message) errorMessage = parsed.error.message;
+        } catch(e) {
+           errorMessage = error.message;
+        }
+      }
+      res.status(500).json({ error: errorMessage });
     }
   });
 
