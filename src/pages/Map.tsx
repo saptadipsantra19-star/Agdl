@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps';
 
 const API_KEY = process.env.GOOGLE_MAPS_PLATFORM_KEY || (import.meta as any).env?.VITE_GOOGLE_MAPS_PLATFORM_KEY || (globalThis as any).GOOGLE_MAPS_PLATFORM_KEY || '';
-const hasValidKey = Boolean(API_KEY) && API_KEY !== 'YOUR_API_KEY';
+const hasValidKey = Boolean(API_KEY) && API_KEY !== 'AIzaSyAG3WbXvSFVVFG7VdVnd8Jb2oVG02W1JT8';
 
 export default function MapView() {
   const [activeLayer, setActiveLayer] = useState('Temperature');
