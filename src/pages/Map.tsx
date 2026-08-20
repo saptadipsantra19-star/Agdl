@@ -48,7 +48,7 @@ export default function MapView() {
           <Map
             defaultCenter={{lat: 20.5937, lng: 78.9629}} // Default center (India)
             defaultZoom={5}
-            mapId="AGRI_MAP_ID"
+            mapId="5698287f6e21cb251b344e26"
             internalUsageAttributionIds={['gmp_mcp_codeassist_v1_aistudio']}
             style={{width: '100%', height: '100%'}}
             disableDefaultUI={true}
